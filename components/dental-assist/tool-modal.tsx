@@ -17,11 +17,23 @@ export function ToolModal({
 }) {
   useEffect(() => {
     if (!tool) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [tool, onClose]);
 
   const Icon = tool ? CATEGORY_ICONS[tool.category] ?? DEFAULT_CATEGORY_ICON : DEFAULT_CATEGORY_ICON;
