@@ -1,23 +1,27 @@
 'use client';
 
+import { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ImageIcon, MapPin, Pencil } from 'lucide-react';
 import { DentalTool } from '@/lib/supabase';
 import { CATEGORY_ICONS, DEFAULT_CATEGORY_ICON } from '@/lib/types';
 
-export function ToolCard({
-  tool,
-  onSelect,
-  onEdit,
-}: {
+type ToolCardProps = {
   tool: DentalTool;
   onSelect: (tool: DentalTool) => void;
   onEdit: (tool: DentalTool) => void;
-}) {
+};
+
+export const ToolCard = forwardRef<HTMLElement, ToolCardProps>(function ToolCard({
+  tool,
+  onSelect,
+  onEdit,
+}, ref) {
   const Icon = CATEGORY_ICONS[tool.category] ?? DEFAULT_CATEGORY_ICON;
 
   return (
     <motion.article
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
@@ -106,4 +110,4 @@ export function ToolCard({
       </div>
     </motion.article>
   );
-}
+});

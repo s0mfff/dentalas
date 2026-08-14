@@ -14,7 +14,7 @@ const IMAGE_BUCKET = 'tool-images';
 export function DirectoryTab() {
   const [tools, setTools] = useState<DentalTool[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<DentalTool | null>(null);
@@ -22,35 +22,35 @@ export function DirectoryTab() {
   const [editingTool, setEditingTool] = useState<DentalTool | null>(null);
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
+  async function loadTools() {
+    setLoading(true);
+    setError(null);
 
-    async function loadTools() {
-      setLoading(true);
-      setError(false);
-
+    try {
       const { data, error: fetchError } = await supabase
         .from('dental_tools')
         .select('*')
         .order('sort_order', { ascending: true });
 
-      if (!isMounted) return;
-
-      if (fetchError || !data) {
-        setError(true);
-        setTools([]);
-      } else {
-        setTools(data);
+      if (fetchError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[DentalAssist][select:error]', fetchError);
+        }
+        throw new Error(fetchError.message);
       }
 
+      setTools((data ?? []) as DentalTool[]);
+    } catch (loadError) {
+      const message = loadError instanceof Error ? loadError.message : 'Не удалось загрузить справочник.';
+      setError(message);
+      setTools([]);
+    } finally {
       setLoading(false);
     }
+  }
 
+  useEffect(() => {
     loadTools();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const allTags = useMemo(() => {
@@ -83,6 +83,10 @@ export function DirectoryTab() {
   }, [tools, query, activeTag]);
 
   async function handleSaveTool(payload: DentalToolInput, toolId?: string) {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('[DentalAssist][save:start]', { toolId, payload });
+    }
+
     if (toolId) {
       const { data, error: updateError } = await supabase
         .from('dental_tools')
@@ -91,18 +95,30 @@ export function DirectoryTab() {
         .select('*')
         .single();
 
-      if (updateError || !data) {
-        throw new Error('Не удалось обновить карточку.');
+      if (updateError) {
+        console.error('[DentalAssist][update:error]', updateError);
+        throw new Error(updateError.message || 'Не удалось обновить карточку.');
+      }
+
+      if (!data) {
+        console.error('[DentalAssist][update:error]', { toolId, reason: 'Supabase returned no row' });
+        throw new Error('Supabase не вернул обновлённую карточку.');
+      }
+
+      const updatedTool = data as DentalTool;
+
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[DentalAssist][update:success]', updatedTool);
       }
 
       setTools((current) =>
         current
-          .map((tool) => (tool.id === toolId ? data : tool))
+          .map((tool) => (tool.id === toolId ? updatedTool : tool))
           .sort((a, b) => a.sort_order - b.sort_order)
       );
 
       if (selectedTool?.id === toolId) {
-        setSelectedTool(data);
+        setSelectedTool(updatedTool);
       }
 
       return;
@@ -114,11 +130,23 @@ export function DirectoryTab() {
       .select('*')
       .single();
 
-    if (insertError || !data) {
-      throw new Error('Не удалось добавить новый предмет.');
+    if (insertError) {
+      console.error('[DentalAssist][insert:error]', insertError);
+      throw new Error(insertError.message || 'Не удалось добавить новый предмет.');
     }
 
-    setTools((current) => [...current, data].sort((a, b) => a.sort_order - b.sort_order));
+    if (!data) {
+      console.error('[DentalAssist][insert:error]', { reason: 'Supabase returned no row' });
+      throw new Error('Supabase не вернул созданную карточку.');
+    }
+
+    const insertedTool = data as DentalTool;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('[DentalAssist][insert:success]', insertedTool);
+    }
+
+    setTools((current) => [...current, insertedTool].sort((a, b) => a.sort_order - b.sort_order));
   }
 
   async function handleUploadImage(file: File) {
@@ -137,7 +165,8 @@ export function DirectoryTab() {
     });
 
     if (uploadError) {
-      throw new Error('Не удалось загрузить фото. Проверьте настройку Supabase Storage.');
+      console.error('Failed to upload image', uploadError);
+      throw new Error(uploadError.message || 'Не удалось загрузить фото. Проверьте настройку Supabase Storage.');
     }
 
     const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(filePath);
@@ -162,10 +191,7 @@ export function DirectoryTab() {
         const uniqueTags = Array.from(new Set(nextTags));
 
         const { error: updateError } = await supabase.from('dental_tools').update({ tags: uniqueTags }).eq('id', tool.id);
-
-        if (updateError) {
-          throw new Error(`Не удалось обновить тег «${currentTag}».`);
-        }
+        if (updateError) throw new Error(updateError.message);
       })
     );
 
@@ -181,6 +207,7 @@ export function DirectoryTab() {
     if (activeTag === currentTag) {
       setActiveTag(normalized);
     }
+
   }
 
   async function handleDeleteTag(tagToDelete: string) {
@@ -191,10 +218,7 @@ export function DirectoryTab() {
         const nextTags = tool.tags.filter((tag) => tag !== tagToDelete);
 
         const { error: updateError } = await supabase.from('dental_tools').update({ tags: nextTags }).eq('id', tool.id);
-
-        if (updateError) {
-          throw new Error(`Не удалось удалить тег «${tagToDelete}».`);
-        }
+        if (updateError) throw new Error(updateError.message);
       })
     );
 
@@ -208,6 +232,7 @@ export function DirectoryTab() {
     if (activeTag === tagToDelete) {
       setActiveTag(null);
     }
+
   }
 
   function openCreateDialog() {
@@ -273,7 +298,10 @@ export function DirectoryTab() {
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-100 bg-white py-20 text-center shadow-sm">
             <AlertTriangle className="h-6 w-6 text-gold-500" />
             <p className="text-sm font-medium text-gray-700">Не удалось загрузить справочник</p>
-            <p className="text-sm text-gray-400">Проверьте подключение и попробуйте обновить страницу</p>
+            <p className="max-w-xl px-4 text-sm text-gray-500">{error}</p>
+            <button type="button" onClick={loadTools} className="mt-2 text-sm font-medium text-gold-700">
+              Попробовать снова
+            </button>
           </div>
         )}
 

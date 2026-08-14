@@ -98,21 +98,29 @@ export function ToolEditorDialog({
     setSubmitError(null);
 
     try {
+      const imageUrl = form.image_url.trim();
+      const payload: DentalToolInput = {
+        name: form.name.trim(),
+        category: form.category.trim(),
+        storage_location: form.storage_location.trim(),
+        description: form.description.trim(),
+        image_url: imageUrl || null,
+        tags: selectedTags,
+        sort_order: Number.parseInt(form.sort_order, 10) || 0,
+      };
+
+      if (tool && imageUrl === (tool.image_url ?? '')) {
+        payload.image_url = tool.image_url ?? null;
+      }
+
       await onSave(
-        {
-          name: form.name.trim(),
-          category: form.category.trim(),
-          storage_location: form.storage_location.trim(),
-          description: form.description.trim(),
-          image_url: form.image_url.trim() || null,
-          tags: selectedTags,
-          sort_order: Number.parseInt(form.sort_order, 10) || 0,
-        },
+        payload,
         tool?.id
       );
       onClose();
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Не удалось сохранить предмет.');
+      const message = error instanceof Error ? error.message : 'Не удалось сохранить предмет.';
+      setSubmitError(message);
     } finally {
       setSaving(false);
     }
@@ -129,7 +137,8 @@ export function ToolEditorDialog({
       const imageUrl = await onUploadImage(file);
       setForm((current) => ({ ...current, image_url: imageUrl }));
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Не удалось загрузить изображение.');
+      const message = error instanceof Error ? error.message : 'Не удалось загрузить изображение.';
+      setSubmitError(message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
