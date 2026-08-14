@@ -7,7 +7,7 @@ import { ToolCard } from '@/components/dental-assist/tool-card';
 import { TagManagerDialog } from '@/components/dental-assist/tag-manager-dialog';
 import { ToolEditorDialog } from '@/components/dental-assist/tool-editor-dialog';
 import { ToolModal } from '@/components/dental-assist/tool-modal';
-import { DentalTool, DentalToolInput, supabase } from '@/lib/supabase';
+import { DentalTool, DentalToolInput, getSupabaseClient } from '@/lib/supabase';
 
 const IMAGE_BUCKET = 'tool-images';
 
@@ -27,6 +27,7 @@ export function DirectoryTab() {
     setError(null);
 
     try {
+      const supabase = getSupabaseClient();
       const { data, error: fetchError } = await supabase
         .from('dental_tools')
         .select('*')
@@ -83,6 +84,8 @@ export function DirectoryTab() {
   }, [tools, query, activeTag]);
 
   async function handleSaveTool(payload: DentalToolInput, toolId?: string) {
+    const supabase = getSupabaseClient();
+
     if (process.env.NODE_ENV === 'development') {
       console.debug('[DentalAssist][save:start]', { toolId, payload });
     }
@@ -150,6 +153,8 @@ export function DirectoryTab() {
   }
 
   async function handleUploadImage(file: File) {
+    const supabase = getSupabaseClient();
+
     if (!file.type.startsWith('image/')) {
       throw new Error('Можно загружать только изображения.');
     }
@@ -174,6 +179,8 @@ export function DirectoryTab() {
   }
 
   async function handleRenameTag(currentTag: string, nextTag: string) {
+    const supabase = getSupabaseClient();
+
     const normalized = nextTag.trim();
     if (!normalized) {
       throw new Error('Введите новое название тега.');
@@ -211,6 +218,8 @@ export function DirectoryTab() {
   }
 
   async function handleDeleteTag(tagToDelete: string) {
+    const supabase = getSupabaseClient();
+
     const affectedTools = tools.filter((tool) => tool.tags.includes(tagToDelete));
 
     await Promise.all(

@@ -1,9 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseKey = (
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)?.trim();
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
+
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl!, supabaseKey!) : null;
+
+export function getSupabaseClient() {
+  if (!supabase) {
+    throw new Error(
+      'Supabase ещё не подключён. Заполните NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY в .env.'
+    );
+  }
+
+  return supabase;
+}
 
 export type DentalTool = {
   id: string;
