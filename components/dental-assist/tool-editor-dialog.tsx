@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ImagePlus, Loader2, Plus, Settings2, Upload, X } from 'lucide-react';
+import { ImagePlus, Loader2, MapPin, Plus, Settings2, Upload, X } from 'lucide-react';
+import { getStorageZonePath, StorageZone } from '@/lib/storage-zones';
 import { DentalTool, DentalToolInput } from '@/lib/supabase';
 import {
   Dialog,
@@ -19,8 +20,10 @@ type ToolEditorDialogProps = {
   open: boolean;
   tool: DentalTool | null;
   availableTags: string[];
+  availableStorageZones: StorageZone[];
+  initialStorageZoneId: string | null;
   onClose: () => void;
-  onSave: (payload: DentalToolInput, toolId?: string) => Promise<void>;
+  onSave: (payload: DentalToolInput, toolId?: string, storageZoneId?: string) => Promise<void>;
   onManageTags: () => void;
   onUploadImage: (file: File) => Promise<string>;
 };
@@ -47,6 +50,8 @@ export function ToolEditorDialog({
   open,
   tool,
   availableTags,
+  availableStorageZones,
+  initialStorageZoneId,
   onClose,
   onSave,
   onManageTags,
@@ -54,6 +59,7 @@ export function ToolEditorDialog({
 }: ToolEditorDialogProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedStorageZoneId, setSelectedStorageZoneId] = useState('');
   const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -64,10 +70,11 @@ export function ToolEditorDialog({
     if (!open) return;
 
     if (tool) {
+      const initialStorageZone = availableStorageZones.find((zone) => zone.id === initialStorageZoneId);
       setForm({
         name: tool.name,
         category: tool.category,
-        storage_location: tool.storage_location,
+        storage_location: initialStorageZone ? getStorageZonePath(initialStorageZone) : tool.storage_location,
         description: tool.description,
         image_url: tool.image_url ?? '',
         sort_order: String(tool.sort_order),
@@ -78,18 +85,37 @@ export function ToolEditorDialog({
       setSelectedTags([]);
     }
 
+    setSelectedStorageZoneId(initialStorageZoneId ?? '');
+
     setNewTag('');
     setSubmitError(null);
-  }, [open, tool]);
+  }, [availableStorageZones, initialStorageZoneId, open, tool]);
 
   const previewTags = useMemo(() => {
     return selectedTags.length > 0 ? selectedTags : ['тег 1', 'тег 2'];
   }, [selectedTags]);
 
+  const storageZoneGroups = useMemo(() => {
+    const groups = new Map<string, { label: string; zones: StorageZone[] }>();
+
+    availableStorageZones.forEach((zone) => {
+      const group = groups.get(zone.storage_object_id) ?? {
+        label: `${zone.room_title} / ${zone.storage_title}`,
+        zones: [],
+      };
+      group.zones.push(zone);
+      groups.set(zone.storage_object_id, group);
+    });
+
+    return Array.from(groups.values());
+  }, [availableStorageZones]);
+
+  const selectedStorageZone = availableStorageZones.find((zone) => zone.id === selectedStorageZoneId) ?? null;
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form.name.trim() || !form.category.trim() || !form.storage_location.trim()) {
+    if (!form.name.trim() || !form.category.trim() || !selectedStorageZone) {
       setSubmitError('Заполните название, категорию и место хранения.');
       return;
     }
@@ -102,7 +128,7 @@ export function ToolEditorDialog({
       const payload: DentalToolInput = {
         name: form.name.trim(),
         category: form.category.trim(),
-        storage_location: form.storage_location.trim(),
+        storage_location: getStorageZonePath(selectedStorageZone),
         description: form.description.trim(),
         image_url: imageUrl || null,
         tags: selectedTags,
@@ -115,7 +141,8 @@ export function ToolEditorDialog({
 
       await onSave(
         payload,
-        tool?.id
+        tool?.id,
+        selectedStorageZone.id
       );
       onClose();
     } catch (error) {
@@ -212,11 +239,34 @@ export function ToolEditorDialog({
               </div>
 
               <Field label="Место хранения">
-                <Input
-                  value={form.storage_location}
-                  onChange={(event) => updateField('storage_location', event.target.value)}
-                  placeholder="Шкаф B2, верхняя полка"
-                />
+                <select
+                  value={selectedStorageZoneId}
+                  onChange={(event) => {
+                    const zoneId = event.target.value;
+                    const zone = availableStorageZones.find((entry) => entry.id === zoneId);
+                    setSelectedStorageZoneId(zoneId);
+                    updateField('storage_location', zone ? getStorageZonePath(zone) : '');
+                  }}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-gray-700 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
+                >
+                  <option value="">Выберите кабинет, шкаф и секцию</option>
+                  {storageZoneGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.zones.map((zone) => (
+                        <option key={zone.id} value={zone.id}>
+                          {zone.path_title}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+
+                {selectedStorageZone && (
+                  <div className="mt-2 flex items-start gap-2 rounded-xl border border-[#E2D3C6] bg-[#FBF5EE] px-3 py-2 text-xs leading-relaxed text-[#765E50]">
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 flex-none text-[#B85F43]" />
+                    <span>{getStorageZonePath(selectedStorageZone)}</span>
+                  </div>
+                )}
               </Field>
 
               <div className="space-y-3">

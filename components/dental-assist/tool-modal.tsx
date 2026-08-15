@@ -13,7 +13,7 @@ export function ToolModal({
 }: {
   tool: DentalTool | null;
   onClose: () => void;
-  onEdit: (tool: DentalTool) => void;
+  onEdit?: (tool: DentalTool) => void;
 }) {
   useEffect(() => {
     if (!tool) return;
@@ -106,14 +106,16 @@ export function ToolModal({
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => onEdit(tool)}
-                    className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-gold-200 hover:bg-gold-50"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span>Редактировать</span>
-                  </button>
+                  {onEdit && (
+                    <button
+                      type="button"
+                      onClick={() => onEdit(tool)}
+                      className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-gold-200 hover:bg-gold-50"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span>Редактировать</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="mt-6 rounded-[24px] border border-gray-100 bg-gray-50/80 p-5">

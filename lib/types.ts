@@ -12,7 +12,7 @@ import {
   Wrench,
 } from 'lucide-react';
 
-export type TabId = 'directory' | 'cabinet' | 'protocols';
+export type TabId = 'directory' | 'cabinet' | 'storage-map' | 'protocols';
 
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'Диагностика': Stethoscope,

@@ -7,9 +7,15 @@ import { ToolCard } from '@/components/dental-assist/tool-card';
 import { TagManagerDialog } from '@/components/dental-assist/tag-manager-dialog';
 import { ToolEditorDialog } from '@/components/dental-assist/tool-editor-dialog';
 import { ToolModal } from '@/components/dental-assist/tool-modal';
+import { ALL_STORAGE_ZONES } from '@/lib/storage-zones';
 import { DentalTool, DentalToolInput, getSupabaseClient } from '@/lib/supabase';
 
 const IMAGE_BUCKET = 'tool-images';
+
+type ToolStorageRelation = {
+  dental_tool_id: string;
+  zone_id: string;
+};
 
 export function DirectoryTab() {
   const [tools, setTools] = useState<DentalTool[]>([]);
@@ -21,6 +27,7 @@ export function DirectoryTab() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<DentalTool | null>(null);
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
+  const [toolZoneIds, setToolZoneIds] = useState<Record<string, string[]>>({});
 
   async function loadTools() {
     setLoading(true);
@@ -28,19 +35,32 @@ export function DirectoryTab() {
 
     try {
       const supabase = getSupabaseClient();
-      const { data, error: fetchError } = await supabase
-        .from('dental_tools')
-        .select('*')
-        .order('sort_order', { ascending: true });
+      const [toolsResult, relationsResult] = await Promise.all([
+        supabase.from('dental_tools').select('*').order('sort_order', { ascending: true }),
+        supabase.from('storage_zone_items').select('dental_tool_id, zone_id'),
+      ]);
 
-      if (fetchError) {
+      if (toolsResult.error) {
         if (process.env.NODE_ENV === 'development') {
-          console.error('[DentalAssist][select:error]', fetchError);
+          console.error('[DentalAssist][select:error]', toolsResult.error);
         }
-        throw new Error(fetchError.message);
+        throw new Error(toolsResult.error.message);
       }
 
-      setTools((data ?? []) as DentalTool[]);
+      if (relationsResult.error) {
+        console.error('[DentalAssist][storage-relations:error]', relationsResult.error);
+        throw new Error(relationsResult.error.message);
+      }
+
+      setTools((toolsResult.data ?? []) as DentalTool[]);
+      const relationMap: Record<string, string[]> = {};
+      ((relationsResult.data ?? []) as ToolStorageRelation[]).forEach((relation) => {
+        relationMap[relation.dental_tool_id] = [
+          ...(relationMap[relation.dental_tool_id] ?? []),
+          relation.zone_id,
+        ];
+      });
+      setToolZoneIds(relationMap);
     } catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : 'Не удалось загрузить справочник.';
       setError(message);
@@ -83,8 +103,53 @@ export function DirectoryTab() {
     });
   }, [tools, query, activeTag]);
 
-  async function handleSaveTool(payload: DentalToolInput, toolId?: string) {
+  async function syncToolStorageZone(toolId: string, zoneId: string) {
     const supabase = getSupabaseClient();
+    const { data: currentRelations, error: currentRelationsError } = await supabase
+      .from('storage_zone_items')
+      .select('zone_id')
+      .eq('dental_tool_id', toolId);
+
+    if (currentRelationsError) throw new Error(currentRelationsError.message);
+
+    const currentZoneIds = (currentRelations ?? []).map((relation) => relation.zone_id as string);
+
+    if (!currentZoneIds.includes(zoneId)) {
+      const { data: lastRows, error: orderError } = await supabase
+        .from('storage_zone_items')
+        .select('sort_order')
+        .eq('zone_id', zoneId)
+        .order('sort_order', { ascending: false })
+        .limit(1);
+
+      if (orderError) throw new Error(orderError.message);
+
+      const nextSortOrder = ((lastRows?.[0]?.sort_order as number | undefined) ?? 0) + 1;
+      const { error: relationError } = await supabase.from('storage_zone_items').insert({
+        zone_id: zoneId,
+        dental_tool_id: toolId,
+        sort_order: nextSortOrder,
+      });
+
+      if (relationError) throw new Error(relationError.message);
+    }
+
+    const { error: cleanupError } = await supabase
+      .from('storage_zone_items')
+      .delete()
+      .eq('dental_tool_id', toolId)
+      .neq('zone_id', zoneId);
+
+    if (cleanupError) throw new Error(cleanupError.message);
+    setToolZoneIds((current) => ({ ...current, [toolId]: [zoneId] }));
+  }
+
+  async function handleSaveTool(payload: DentalToolInput, toolId?: string, storageZoneId?: string) {
+    const supabase = getSupabaseClient();
+
+    if (!storageZoneId) {
+      throw new Error('Выберите место хранения.');
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.debug('[DentalAssist][save:start]', { toolId, payload });
@@ -109,6 +174,7 @@ export function DirectoryTab() {
       }
 
       const updatedTool = data as DentalTool;
+      await syncToolStorageZone(updatedTool.id, storageZoneId);
 
       if (process.env.NODE_ENV === 'development') {
         console.debug('[DentalAssist][update:success]', updatedTool);
@@ -144,6 +210,13 @@ export function DirectoryTab() {
     }
 
     const insertedTool = data as DentalTool;
+
+    try {
+      await syncToolStorageZone(insertedTool.id, storageZoneId);
+    } catch (storageError) {
+      await supabase.from('dental_tools').delete().eq('id', insertedTool.id);
+      throw storageError;
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.debug('[DentalAssist][insert:success]', insertedTool);
@@ -342,6 +415,8 @@ export function DirectoryTab() {
         open={editorOpen}
         tool={editingTool}
         availableTags={allTags}
+        availableStorageZones={ALL_STORAGE_ZONES}
+        initialStorageZoneId={editingTool ? toolZoneIds[editingTool.id]?.[0] ?? null : null}
         onClose={() => {
           setEditorOpen(false);
           setEditingTool(null);

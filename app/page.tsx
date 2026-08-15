@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Briefcase, ClipboardList } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
+import { CabinetMap } from '@/components/dental-assist/cabinet-map';
 import { DirectoryTab } from '@/components/dental-assist/directory-tab';
 import { Header } from '@/components/dental-assist/header';
 import { PlaceholderTab } from '@/components/dental-assist/placeholder-tab';
+import { StorageMap } from '@/components/dental-assist/storage-map';
 import { TabId } from '@/lib/types';
 
 export default function Home() {
@@ -55,13 +57,9 @@ export default function Home() {
           >
             {activeTab === 'directory' && <DirectoryTab />}
 
-            {activeTab === 'cabinet' && (
-              <PlaceholderTab
-                icon={Briefcase}
-                title="Кабинет"
-                description="Здесь появится чек-лист подготовки кабинета к приёму и учёт расходников. Раздел в разработке."
-              />
-            )}
+            {activeTab === 'cabinet' && <CabinetMap />}
+
+            {activeTab === 'storage-map' && <StorageMap />}
 
             {activeTab === 'protocols' && (
               <PlaceholderTab

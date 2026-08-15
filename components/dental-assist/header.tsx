@@ -1,12 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BookOpen, Briefcase, ClipboardList, Smile } from 'lucide-react';
+import { BookOpen, Briefcase, ClipboardList, MapPinned, Smile } from 'lucide-react';
 import { TabId } from '@/lib/types';
 
 const TABS: { id: TabId; label: string; icon: typeof BookOpen }[] = [
   { id: 'directory', label: 'Справочник', icon: BookOpen },
   { id: 'cabinet', label: 'Кабинет', icon: Briefcase },
+  { id: 'storage-map', label: 'Карта хранения', icon: MapPinned },
   { id: 'protocols', label: 'Протоколы', icon: ClipboardList },
 ];
 
@@ -34,7 +35,7 @@ export function Header({
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 self-start rounded-full border border-gray-100 bg-white p-1 shadow-sm sm:self-auto">
+        <nav className="flex w-full items-center gap-1 self-start overflow-x-auto rounded-full border border-gray-100 bg-white p-1 shadow-sm sm:w-auto sm:self-auto">
           {TABS.map((tab) => {
             const isActive = tab.id === activeTab;
             const Icon = tab.icon;
@@ -42,7 +43,7 @@ export function Header({
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className="relative flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors sm:px-4"
+                className="relative flex flex-none items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors sm:px-4"
               >
                 {isActive && (
                   <motion.span
