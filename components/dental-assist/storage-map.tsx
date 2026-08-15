@@ -5,13 +5,9 @@ import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CircleDot, MapPinned, MousePointer2, Ruler } from 'lucide-react';
 import { CabinetMap } from '@/components/dental-assist/cabinet-map';
+import { ClinicPlanSvg } from '@/components/dental-assist/clinic-plan-svg';
 import { VerticalCabinetMap } from '@/components/dental-assist/vertical-cabinet-map';
-import {
-  CLINIC_MAP_IMAGE,
-  CLINIC_ROOMS,
-  ClinicRoom,
-  ClinicStorageObject,
-} from '@/lib/storage-map-data';
+import { CLINIC_ROOMS, ClinicRoom, ClinicStorageObject } from '@/lib/storage-map-data';
 
 export function StorageMap() {
   const [selectedRoomId, setSelectedRoomId] = useState<ClinicRoom['id'] | null>(null);
@@ -63,32 +59,17 @@ export function StorageMap() {
       <div className="bg-[#FFFDF9] p-3 sm:p-6">
         <div className="relative overflow-x-auto rounded-[22px] border border-[#DDD3C9] bg-[#FBFAF7] shadow-inner">
           <div className="relative min-w-[820px]">
-            <Image
-              src={CLINIC_MAP_IMAGE.src}
-              width={CLINIC_MAP_IMAGE.width}
-              height={CLINIC_MAP_IMAGE.height}
-              alt="План стоматологической клиники сверху"
-              priority
-              className="clinic-map-image block h-auto w-full select-none opacity-90 mix-blend-multiply"
-              draggable={false}
+            <ClinicPlanSvg
+              rooms={CLINIC_ROOMS}
+              selectedRoomId={selectedRoomId}
+              hoveredRoomId={hoveredRoomId}
+              onRoomSelect={(room) => {
+                setSelectedRoomId(room.id);
+                setOpenedStorageObject(null);
+                if (room.detailPlan) setOpenedRoomId(room.id);
+              }}
+              onRoomHover={setHoveredRoomId}
             />
-
-            <div className="interactive-zones absolute inset-0" aria-label="Интерактивные помещения клиники">
-              {CLINIC_ROOMS.map((room) => (
-                <RoomZone
-                  key={room.id}
-                  room={room}
-                  active={room.id === selectedRoomId}
-                  hovered={room.id === hoveredRoomId}
-                  onSelect={() => {
-                    setSelectedRoomId(room.id);
-                    setOpenedStorageObject(null);
-                    if (room.detailPlan) setOpenedRoomId(room.id);
-                  }}
-                  onHoverChange={(hovered) => setHoveredRoomId(hovered ? room.id : null)}
-                />
-              ))}
-            </div>
 
             <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-[#D8CEC4] bg-[#FFFDF9]/92 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#746A62] shadow-sm backdrop-blur">
               <Ruler className="h-3.5 w-3.5" />
@@ -308,65 +289,6 @@ function StorageObjectZone({
       >
         <span className="block text-xs font-semibold text-[#39332E]">{storageObject.title}</span>
         <span className="mt-0.5 block text-[10px] text-[#7C6E64]">{storageObject.hint}</span>
-      </span>
-    </button>
-  );
-}
-
-function RoomZone({
-  room,
-  active,
-  hovered,
-  onSelect,
-  onHoverChange,
-}: {
-  room: ClinicRoom;
-  active: boolean;
-  hovered: boolean;
-  onSelect: () => void;
-  onHoverChange: (hovered: boolean) => void;
-}) {
-  const highlighted = active || hovered;
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      onMouseEnter={() => onHoverChange(true)}
-      onMouseLeave={() => onHoverChange(false)}
-      onFocus={() => onHoverChange(true)}
-      onBlur={() => onHoverChange(false)}
-      aria-label={`${room.title}. ${room.subtitle}`}
-      aria-pressed={active}
-      className="group absolute z-10 outline-none"
-      style={{
-        left: `${room.bounds.x}%`,
-        top: `${room.bounds.y}%`,
-        width: `${room.bounds.width}%`,
-        height: `${room.bounds.height}%`,
-      }}
-    >
-      <span
-        className={`absolute inset-0 rounded-[3px] border transition-all duration-200 ${
-          highlighted
-            ? `border-[#B85F43] ${active ? 'bg-[#C96D4F]/20' : 'bg-[#C96D4F]/12'} shadow-[inset_0_0_0_1px_rgba(184,95,67,0.14)]`
-            : 'border-transparent bg-transparent'
-        }`}
-      />
-
-      <span
-        className={`absolute left-1/2 top-1/2 flex min-h-8 w-max max-w-[150px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg border px-2.5 py-1.5 text-center text-[10px] font-bold uppercase leading-tight shadow-sm backdrop-blur-sm transition-all duration-200 ${
-          highlighted
-            ? 'scale-105 border-[#9A4D37] bg-[#B85F43] text-white'
-            : 'border-[#CDBEB1] bg-[#FFFDF9]/92 text-[#704C3E]'
-        }`}
-      >
-        {room.title}
-      </span>
-
-      <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 w-max max-w-[190px] -translate-x-1/2 translate-y-7 rounded-xl border border-[#D7C4B5] bg-[#FFFDF9]/95 px-3 py-2 text-left opacity-0 shadow-[0_10px_28px_rgba(73,49,34,0.16)] backdrop-blur transition-all duration-200 group-hover:translate-y-6 group-hover:opacity-100 group-focus-visible:translate-y-6 group-focus-visible:opacity-100">
-        <span className="block text-xs font-semibold text-[#39332E]">{room.title}</span>
-        <span className="mt-0.5 block text-[10px] leading-relaxed text-[#7C6E64]">{room.subtitle}</span>
       </span>
     </button>
   );

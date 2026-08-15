@@ -26,12 +26,6 @@ export type ClinicRoom = {
   };
 };
 
-export const CLINIC_MAP_IMAGE = {
-  src: '/clinic-map/clinic-plan-v2.jpg',
-  width: 1280,
-  height: 720,
-};
-
 const RIGHT_UPPER_ROOM: ClinicRoom = {
   id: 'room-03',
   title: 'Кабинет 3',
