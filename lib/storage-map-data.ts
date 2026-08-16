@@ -1,3 +1,8 @@
+import type { StaticImageData } from 'next/image';
+import cabinetOnePlan from '@/public/clinic-map/cabinet-1.png';
+import cabinetTwoPlan from '@/public/clinic-map/cabinet-2.png';
+import cabinetThreePlan from '@/public/clinic-map/cabinet-3.png';
+
 export type ClinicMapBounds = {
   x: number;
   y: number;
@@ -20,7 +25,7 @@ export type ClinicRoom = {
   bounds: ClinicMapBounds;
   storageObjects: ClinicStorageObject[];
   detailPlan?: {
-    src: string;
+    src: StaticImageData;
     width: number;
     height: number;
   };
@@ -30,7 +35,7 @@ const RIGHT_UPPER_ROOM: ClinicRoom = {
   id: 'room-03',
   title: 'Кабинет 3',
   subtitle: 'Рабочая зона врача',
-  bounds: { x: 74, y: 13.8, width: 21.5, height: 29.8 },
+  bounds: { x: 70.3, y: 3.8, width: 22.1, height: 39.6 },
   storageObjects: [
     {
       id: 'room-03-dental-unit',
@@ -48,7 +53,7 @@ const RIGHT_UPPER_ROOM: ClinicRoom = {
     },
   ],
   detailPlan: {
-    src: '/clinic-map/cabinet-2.png',
+    src: cabinetTwoPlan,
     width: 1426,
     height: 1103,
   },
@@ -58,7 +63,7 @@ const RIGHT_LOWER_ROOM: ClinicRoom = {
   id: 'room-02',
   title: 'Кабинет 2',
   subtitle: 'Рабочая зона врача',
-  bounds: { x: 74, y: 44.5, width: 21.5, height: 30.5 },
+  bounds: { x: 70.3, y: 45.5, width: 22.1, height: 49.5 },
   storageObjects: [
     {
       id: 'room-02-vertical-cabinet',
@@ -69,7 +74,7 @@ const RIGHT_LOWER_ROOM: ClinicRoom = {
     },
   ],
   detailPlan: {
-    src: '/clinic-map/cabinet-3.png',
+    src: cabinetThreePlan,
     width: 1254,
     height: 1254,
   },
@@ -80,10 +85,10 @@ export const CLINIC_ROOMS: ClinicRoom[] = [
     id: 'room-01',
     title: 'Кабинет 1',
     subtitle: 'Рабочая зона врача',
-    bounds: { x: 3.4, y: 13.8, width: 35.4, height: 30.1 },
+    bounds: { x: 3.9, y: 3.8, width: 22.6, height: 35.1 },
     storageObjects: [],
     detailPlan: {
-      src: '/clinic-map/cabinet-1.png',
+      src: cabinetOnePlan,
       width: 1662,
       height: 946,
     },
@@ -94,7 +99,7 @@ export const CLINIC_ROOMS: ClinicRoom[] = [
     id: 'room-04',
     title: 'Ординаторская',
     subtitle: 'Зона персонала',
-    bounds: { x: 56.8, y: 13.8, width: 10.2, height: 40.6 },
+    bounds: { x: 61.4, y: 3.8, width: 8.2, height: 28.2 },
     storageObjects: [],
   },
 ];

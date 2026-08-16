@@ -2,7 +2,7 @@ export function ClinicPlanReferenceLayer() {
   return (
     <g
       transform="translate(0 720) scale(0.1 -0.1)"
-      fill="currentColor"
+      fill="url(#enhanced-plan-gradient)"
       stroke="none"
       aria-hidden="true"
       pointerEvents="none"
