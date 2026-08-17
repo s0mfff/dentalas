@@ -14,8 +14,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('directory');
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#F6EFE5]">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F6EFE5]">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,244,214,0.95),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(245,210,161,0.38),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(255,226,194,0.62),_transparent_34%),linear-gradient(180deg,_#FCF6EE_0%,_#F7ECDD_46%,_#F4E6D6_100%)]" />
         <div className="absolute -top-24 left-[8%] h-72 w-72 rounded-full bg-[#FFE6C7]/70 blur-3xl" />
         <div className="absolute right-[6%] top-24 h-80 w-80 rounded-full bg-[#F4D6AF]/50 blur-3xl" />

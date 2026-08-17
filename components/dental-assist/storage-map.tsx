@@ -25,125 +25,117 @@ export function StorageMap() {
 
   return (
     <div className="relative">
-      <motion.section
-        animate={openedRoom ? { opacity: 0.08, scale: 1.14 } : { opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        style={{ transformOrigin }}
-        aria-hidden={Boolean(openedRoom)}
-        className={`transform-gpu overflow-hidden rounded-[30px] border border-[#DCCDBE] bg-[#F8F2E9] shadow-[0_24px_70px_rgba(96,63,42,0.10)] will-change-transform ${
-          openedRoom ? 'pointer-events-none' : ''
-        }`}
-      >
-      <div className="border-b border-[#DCCDBE] px-5 py-6 sm:px-7 sm:py-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#A6533D]">
-              <MapPinned className="h-4 w-4" />
-              Навигация по клинике
-            </div>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#292521] sm:text-3xl">
-              Карта хранения
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#71675E]">
-              Выберите помещение на плане. Внутренние объекты хранения будут добавлены на следующем этапе.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 self-start rounded-full border border-[#D9C8B8] bg-[#FFFDF9] px-4 py-2 text-xs text-[#6B625B] sm:self-auto">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#B85F43]" />
-            4 интерактивные зоны
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-[#FFFDF9] p-3 sm:p-6">
-        <div className="relative overflow-x-auto rounded-[22px] border border-[#DDD3C9] bg-[#FBFAF7] shadow-inner">
-          <div className="relative min-w-[820px]">
-            <ClinicPlanSvg
-              rooms={CLINIC_ROOMS}
-              selectedRoomId={selectedRoomId}
-              hoveredRoomId={hoveredRoomId}
-              onRoomSelect={(room) => {
-                setSelectedRoomId(room.id);
-                setOpenedStorageObject(null);
-                if (room.detailPlan) setOpenedRoomId(room.id);
-              }}
-              onRoomHover={setHoveredRoomId}
-            />
-
-            <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-[#D8CEC4] bg-[#FFFDF9]/92 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#746A62] shadow-sm backdrop-blur">
-              <Ruler className="h-3.5 w-3.5" />
-              План клиники / уровень 01
-            </div>
-
-            <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-2 rounded-full border border-[#D8CEC4] bg-[#FFFDF9]/92 px-3 py-1.5 text-[10px] font-medium text-[#746A62] shadow-sm backdrop-blur">
-              <MousePointer2 className="h-3.5 w-3.5 text-[#B85F43]" />
-              Наведите или нажмите на комнату
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-[#DCCDBE] bg-[#F3E9DD] px-5 py-5 sm:px-7">
-        <AnimatePresence mode="wait" initial={false}>
-          {selectedRoom ? (
-            <motion.div
-              key={selectedRoom.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18 }}
-              className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      <AnimatePresence mode="wait" initial={false}>
+        {!openedRoom ? (
+          <motion.div
+            key="clinic-map"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.section
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="transform-gpu overflow-hidden rounded-[30px] border border-[#DCCDBE] bg-[#F8F2E9] shadow-[0_24px_70px_rgba(96,63,42,0.10)]"
             >
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="mt-1 h-9 w-1 flex-none rounded-full bg-[#B85F43]" />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A6533D]">Выбрано помещение</p>
-                  <h3 className="mt-1 text-xl font-semibold uppercase text-[#302B27]">{selectedRoom.title}</h3>
-                  <p className="mt-1 text-sm text-[#74675E]">{selectedRoom.subtitle}</p>
+              <div className="border-b border-[#DCCDBE] px-5 py-6 sm:px-7 sm:py-7">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#A6533D]">
+                      <MapPinned className="h-4 w-4" />
+                      Навигация по клинике
+                    </div>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#292521] sm:text-3xl">
+                      Карта хранения
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#71675E]">
+                      Выберите помещение на плане. Внутренние объекты хранения будут добавлены на следующем этапе.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start rounded-full border border-[#D9C8B8] bg-[#FFFDF9] px-4 py-2 text-xs text-[#6B625B] sm:self-auto">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#B85F43]" />
+                    4 интерактивные зоны
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#D7C6B7] bg-[#FFFDF9]/80 px-4 py-3 text-sm text-[#74675E]">
-                Переход внутрь кабинета будет добавлен позже
+              <div className="bg-[#FFFDF9] p-3 sm:p-6">
+                <div className="relative overflow-x-auto rounded-[22px] border border-[#DDD3C9] bg-[#FBFAF7] shadow-inner">
+                  <div className="relative min-w-[820px]">
+                    <ClinicPlanSvg
+                      rooms={CLINIC_ROOMS}
+                      selectedRoomId={selectedRoomId}
+                      hoveredRoomId={hoveredRoomId}
+                      onRoomSelect={(room) => {
+                        setSelectedRoomId(room.id);
+                        setOpenedStorageObject(null);
+                        if (room.detailPlan) setOpenedRoomId(room.id);
+                      }}
+                      onRoomHover={setHoveredRoomId}
+                    />
+
+                    <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-[#D8CEC4] bg-[#FFFDF9]/92 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#746A62] shadow-sm backdrop-blur">
+                      <Ruler className="h-3.5 w-3.5" />
+                      План клиники / уровень 01
+                    </div>
+
+                    <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-2 rounded-full border border-[#D8CEC4] bg-[#FFFDF9]/92 px-3 py-1.5 text-[10px] font-medium text-[#746A62] shadow-sm backdrop-blur">
+                      <MousePointer2 className="h-3.5 w-3.5 text-[#B85F43]" />
+                      Наведите или нажмите на комнату
+                    </div>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="empty-selection"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-3 text-sm text-[#74675E]"
-            >
-              <CircleDot className="h-5 w-5 flex-none text-[#B85F43]" />
-              Выберите одну из четырёх зон на плане клиники.
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      </motion.section>
 
-      <AnimatePresence initial={false}>
-        {openedRoom?.detailPlan && (
-          <RoomDetail
-            key={openedRoom.id}
-            room={openedRoom}
-            onBack={() => {
-              setOpenedStorageObject(null);
-              setOpenedRoomId(null);
-            }}
-            onOpenStorageObject={setOpenedStorageObject}
-          />
-        )}
+              <div className="border-t border-[#DCCDBE] bg-[#F3E9DD] px-5 py-5 sm:px-7">
+                <AnimatePresence mode="wait" initial={false}>
+                  {selectedRoom ? (
+                    <motion.div
+                      key={selectedRoom.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.18 }}
+                      className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="mt-1 h-9 w-1 flex-none rounded-full bg-[#B85F43]" />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A6533D]">Выбрано помещение</p>
+                          <h3 className="mt-1 text-xl font-semibold uppercase text-[#302B27]">{selectedRoom.title}</h3>
+                          <p className="mt-1 text-sm text-[#74675E]">{selectedRoom.subtitle}</p>
+                        </div>
+                      </div>
 
-        {openedRoom && openedStorageObject && (
+                      <div className="rounded-2xl border border-[#D7C6B7] bg-[#FFFDF9]/80 px-4 py-3 text-sm text-[#74675E]">
+                        Переход внутрь кабинета будет добавлен позже
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="empty-selection"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-3 text-sm text-[#74675E]"
+                    >
+                      <CircleDot className="h-5 w-5 flex-none text-[#B85F43]" />
+                      Выберите одну из четырёх зон на плане клиники.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.section>
+          </motion.div>
+        ) : openedStorageObject ? (
           <motion.div
-            key={openedStorageObject.id}
+            key={`storage-${openedStorageObject.id}`}
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 z-30 h-fit min-h-full transform-gpu bg-[#F6EFE5] will-change-transform"
+            className="transform-gpu bg-[#F6EFE5]"
           >
             <div className="mb-4 flex items-center justify-between gap-4 rounded-[22px] border border-[#DCCDBE] bg-[#F8F2E9] px-4 py-3 shadow-sm sm:px-5">
               <button
@@ -168,7 +160,17 @@ export function StorageMap() {
               />
             )}
           </motion.div>
-        )}
+        ) : openedRoom?.detailPlan ? (
+          <RoomDetail
+            key={openedRoom.id}
+            room={openedRoom}
+            onBack={() => {
+              setOpenedStorageObject(null);
+              setOpenedRoomId(null);
+            }}
+            onOpenStorageObject={setOpenedStorageObject}
+          />
+        ) : null}
       </AnimatePresence>
     </div>
   );
@@ -191,12 +193,7 @@ function RoomDetail({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.94 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      style={{
-        transformOrigin: `${room.bounds.x + room.bounds.width / 2}% ${
-          room.bounds.y + room.bounds.height / 2
-        }%`,
-      }}
-      className="absolute inset-0 z-20 h-fit min-h-full transform-gpu overflow-hidden rounded-[30px] border border-[#DCCDBE] bg-[#F8F2E9] shadow-[0_24px_70px_rgba(96,63,42,0.10)] will-change-transform"
+      className="transform-gpu overflow-hidden rounded-[30px] border border-[#DCCDBE] bg-[#F8F2E9] shadow-[0_24px_70px_rgba(96,63,42,0.10)]"
     >
       <div className="border-b border-[#DCCDBE] px-5 py-5 sm:px-7 sm:py-6">
         <button
@@ -265,13 +262,18 @@ function StorageObjectZone({
   onOpen: () => void;
 }) {
   const tooltipOnLeft = storageObject.bounds.x > 70;
+  const isInteractive = storageObject.interactive !== false;
 
   return (
     <button
       type="button"
-      onClick={onOpen}
-      aria-label={`Открыть: ${storageObject.title}`}
-      className="group absolute z-10 outline-none"
+      onClick={() => {
+        if (isInteractive) {
+          onOpen();
+        }
+      }}
+      aria-label={`${isInteractive ? 'Открыть' : 'Зона'}: ${storageObject.title}`}
+      className={`group absolute z-10 outline-none ${isInteractive ? 'cursor-pointer' : 'cursor-default'}`}
       style={{
         left: `${storageObject.bounds.x}%`,
         top: `${storageObject.bounds.y}%`,

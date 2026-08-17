@@ -37,7 +37,8 @@ export function ClinicPlanSvg({
         {rooms.map((room) => {
           const selected = selectedRoomId === room.id;
           const hovered = hoveredRoomId === room.id;
-          const highlighted = selected || hovered;
+          // Visual highlight must follow only hover/focus (accessibility)
+          const highlighted = hovered;
 
           return (
             <button
@@ -69,20 +70,18 @@ export function ClinicPlanSvg({
                 }}
               />
 
-              <span
-                className={`pointer-events-none absolute left-3 top-3 max-w-[calc(100%-1.5rem)] rounded-lg border px-2.5 py-1.5 text-left shadow-sm transition-colors duration-200 ${
-                  highlighted
-                    ? 'border-[#984A34] bg-[#B85F43] text-[#FFFDF9]'
-                    : 'border-[#CDBEB1] bg-[#FFFDF9]/90 text-[#292521]'
-                }`}
-              >
-                <span className="block whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.08em]">
-                  {room.title}
+              {/* Render informational card only when hovered/focused to avoid overlapping labels */}
+              {highlighted && (
+                <span
+                  className={`pointer-events-none absolute left-3 top-3 z-30 max-w-[220px] rounded-lg border px-2.5 py-1.5 text-left shadow-sm transition-all duration-200 break-words`}
+                  style={{ borderColor: '#984A34', backgroundColor: TERRACOTTA, color: '#FFFDF9' }}
+                >
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.08em]">
+                    {room.title}
+                  </span>
+                  <span className="mt-0.5 block text-[8px] text-[#FFF4EE]">{room.subtitle}</span>
                 </span>
-                <span className={`mt-0.5 block text-[8px] ${highlighted ? 'text-[#FFF4EE]' : 'text-[#766B62]'}`}>
-                  {room.subtitle}
-                </span>
-              </span>
+              )}
             </button>
           );
         })}
